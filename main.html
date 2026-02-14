@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>포지션별 앙꼬 뽑기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0b0e1a; color: white; }
+        .card-bg { background-color: #161b2c; border: 1px solid #2d3748; }
+        .input-area { background-color: #05070a; border: 1px solid #2d3748; color: #e2e8f0; }
+        .btn-blue { background-color: #2563eb; }
+        .btn-blue:hover { background-color: #1d4ed8; }
+        .btn-gray { background-color: #f1f5f9; color: #1e293b; }
+    </style>
+</head>
+<body class="min-h-screen p-8 flex flex-col items-center">
+
+    <h1 class="text-3xl font-bold mb-8 flex items-center gap-2">
+        <span class="text-purple-400">🎮</span> 포지션별 앙꼬 뽑기
+    </h1>
+
+    <div class="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="card-bg p-4 rounded-xl shadow-lg">
+                <label class="block mb-2 font-bold text-lg text-blue-300">🛡️ 탱커</label>
+                <textarea id="input-tanker" class="input-area w-full h-40 p-3 rounded-lg resize-none focus:outline-none" placeholder="지원자 명단..."></textarea>
+                <button onclick="pickWinner('tanker')" class="btn-blue w-full mt-3 py-3 rounded-lg font-bold transition">탱커 뽑기</button>
+                <div id="result-tanker" class="mt-3 text-center text-yellow-400 font-bold text-xl min-h-[1.5rem]"></div>
+            </div>
+
+            <div class="card-bg p-4 rounded-xl shadow-lg">
+                <label class="block mb-2 font-bold text-lg text-red-400">⚔️ 딜러</label>
+                <textarea id="input-dealer" class="input-area w-full h-40 p-3 rounded-lg resize-none focus:outline-none" placeholder="지원자 명단..."></textarea>
+                <button onclick="pickWinner('dealer')" class="btn-blue w-full mt-3 py-3 rounded-lg font-bold transition">딜러 뽑기</button>
+                <div id="result-dealer" class="mt-3 text-center text-yellow-400 font-bold text-xl min-h-[1.5rem]"></div>
+            </div>
+
+            <div class="card-bg p-4 rounded-xl shadow-lg">
+                <label class="block mb-2 font-bold text-lg text-green-400">✨ 서폿</label>
+                <textarea id="input-supporter" class="input-area w-full h-40 p-3 rounded-lg resize-none focus:outline-none" placeholder="지원자 명단..."></textarea>
+                <button onclick="pickWinner('supporter')" class="btn-blue w-full mt-3 py-3 rounded-lg font-bold transition">서폿 뽑기</button>
+                <div id="result-supporter" class="mt-3 text-center text-yellow-400 font-bold text-xl min-h-[1.5rem]"></div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-1">
+            <div class="border border-blue-900 bg-[#0d111d] p-5 rounded-xl text-sm leading-relaxed">
+                <h3 class="text-pink-500 font-bold mb-3 flex items-center gap-1">📌 사용방법</h3>
+                <ul class="space-y-2 text-gray-300">
+                    <li>1. 명단 작성 후 <b>'세팅 확정'</b> 클릭</li>
+                    <li>2. 입력된 목록 내에서만 무작위 추첨</li>
+                    <li>3. <b>'다음 팀 뽑기'</b> 시 결과만 리셋</li>
+                    <li class="text-red-400 mt-4 font-semibold">※ 세팅 확정 시점의 목록이 고정됩니다.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        <button onclick="confirmSettings()" class="btn-gray py-4 rounded-lg font-bold transition hover:bg-white">
+            📝 세팅 확정 / 다음 팀 뽑기
+        </button>
+        <button onclick="resetAll()" class="btn-gray py-4 rounded-lg font-bold transition hover:bg-white">
+            🔄 전체 목록 초기화
+        </button>
+    </div>
+
+    <script>
+        // 고정된 명단을 담을 객체
+        let fixedLists = { tanker: [], dealer: [], supporter: [] };
+
+        // 세팅 확정 함수
+        function confirmSettings() {
+            const roles = ['tanker', 'dealer', 'supporter'];
+            let hasData = false;
+
+            roles.forEach(role => {
+                const text = document.getElementById(`input-${role}`).value;
+                fixedLists[role] = text.split('\n').map(n => n.trim()).filter(n => n !== "");
+                if (fixedLists[role].length > 0) hasData = true;
+                
+                // 결과창만 초기화 (다음 팀 뽑기 준비)
+                document.getElementById(`result-${role}`).innerText = "";
+            });
+
+            if (!hasData) {
+                alert("입력된 명단이 없습니다. 먼저 명단을 작성해주세요.");
+            } else {
+                alert("명단이 고정되었습니다. 이제 각 포지션별 뽑기를 진행하세요!");
+            }
+        }
+
+        // 뽑기 함수 (확정된 목록에서만 선출)
+        function pickWinner(role) {
+            const resultArea = document.getElementById(`result-${role}`);
+            const pool = fixedLists[role];
+
+            if (pool.length === 0) {
+                alert("'세팅 확정' 버튼을 먼저 눌러 명단을 고정해주세요!");
+                return;
+            }
+
+            resultArea.innerText = "추첨 중...";
+            setTimeout(() => {
+                const winner = pool[Math.floor(Math.random() * pool.length)];
+                resultArea.innerText = `🎉 당첨: ${winner}`;
+            }, 300);
+        }
+
+        // 전체 초기화
+        function resetAll() {
+            if(confirm("모든 입력값과 확정된 목록을 삭제하시겠습니까?")) {
+                ['tanker', 'dealer', 'supporter'].forEach(id => {
+                    document.getElementById(`input-${id}`).value = "";
+                    document.getElementById(`result-${id}`).innerText = "";
+                    fixedLists[id] = [];
+                });
+            }
+        }
+    </script>
+</body>
+</html>
